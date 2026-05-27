@@ -44,7 +44,7 @@ const gallery = computed(() => galleries.find((g) => g.id === galleryId))
         </p>
       </div>
 
-      <GalleryGrid :items="gallery.images" />
+      <GalleryGrid :items="gallery.images" :columns="gallery.columns" />
     </div>
 
   </div>
