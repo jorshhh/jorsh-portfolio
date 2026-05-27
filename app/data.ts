@@ -25,6 +25,7 @@ export interface Gallery {
   coverImage: string
   year: number
   tags: string[]
+  columns?: 2 | 3
   images: {
     url: string
     caption: string
@@ -34,6 +35,7 @@ export interface Gallery {
 
 export const portfolio = {
   name: "JORSH",
+  gridColumns: 2 as 2 | 3,
   tagline: "Photographer & Visual Artist",
   bio: "Born and raised in Toronto, ON. It all begins with an idea. Maybe you want to launch a business. Maybe you want to turn a hobby into something more. Or maybe you have a creative project to share with the world. Whatever it is, the way you tell your story online can make all the difference.",
   email: "hello@jorsh.io",
@@ -100,6 +102,7 @@ export const galleries: Gallery[] = [
   {
     id: "travel",
     title: "Travel",
+    columns: 3,
     description: "Visual diaries and landscapes captured across Iceland, Japan, and the Pacific Northwest.",
     coverImage: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80",
     year: 2025,
@@ -135,6 +138,7 @@ export const galleries: Gallery[] = [
   {
     id: "portraits",
     title: "Portraits",
+    columns: 2,
     description: "Minimalist studio portraiture focusing on character, form, and natural light.",
     coverImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&q=80",
     year: 2025,
@@ -165,6 +169,7 @@ export const galleries: Gallery[] = [
   {
     id: "street",
     title: "Street & Architecture",
+    columns: 3,
     description: "Documenting the geometry, shadows, and quiet moments of metropolitan life.",
     coverImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
     year: 2024,

@@ -13,6 +13,7 @@ interface GalleryItem {
 
 const props = defineProps<{
   items: GalleryItem[]
+  columns?: 2 | 3
 }>()
 
 const normalizedItems = computed(() =>
@@ -27,7 +28,7 @@ const normalizedItems = computed(() =>
 
 // ── Column layout ──────────────────────────────────────────────────────────
 
-const columnCount = ref<2 | 3>(2)
+const columnCount = computed(() => props.columns ?? 2)
 
 const TWO_COL_OPTIONS = [[6, 6], [7, 5], [5, 7]] as const
 const THREE_COL_OPTIONS = [[4, 4, 4], [5, 4, 3], [3, 5, 4], [4, 3, 5], [5, 3, 4]] as const
@@ -135,32 +136,6 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
 <template>
   <div class="max-w-[1600px] mx-auto">
-
-    <!-- Grid style toggle -->
-    <div class="flex justify-end items-center gap-2 mb-6 text-xs uppercase tracking-widest select-none">
-      <span class="text-neutral-400">Grid:</span>
-      <button
-        @click="columnCount = 2"
-        class="transition-colors duration-200"
-        :class="columnCount === 2
-          ? 'underline underline-offset-4 font-bold text-black'
-          : 'text-neutral-400 hover:text-black'"
-        aria-pressed="columnCount === 2"
-      >
-        2 Col
-      </button>
-      <span class="text-neutral-300">/</span>
-      <button
-        @click="columnCount = 3"
-        class="transition-colors duration-200"
-        :class="columnCount === 3
-          ? 'underline underline-offset-4 font-bold text-black'
-          : 'text-neutral-400 hover:text-black'"
-        aria-pressed="columnCount === 3"
-      >
-        3 Col
-      </button>
-    </div>
 
     <!-- Grid -->
     <div class="flex flex-col gap-[15px] md:gap-[20px]">
