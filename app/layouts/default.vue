@@ -22,11 +22,11 @@ const isLinkActive = (path: string) => {
         <!-- Nav Links -->
         <nav class="flex items-center gap-6 md:gap-8 text-sm tracking-wider uppercase">
           <NuxtLink 
-            to="/blog" 
+            to="/galleries" 
             class="transition-all py-1"
-            :class="isLinkActive('/blog') ? 'border-b-2 border-black font-semibold' : 'hover:opacity-60'"
+            :class="isLinkActive('/galleries') ? 'border-b-2 border-black font-semibold' : 'hover:opacity-60'"
           >
-            Blog
+            Galleries
           </NuxtLink>
           <NuxtLink 
             to="/about" 

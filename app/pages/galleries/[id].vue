@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { projects } from '../data'
+import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { galleries } from '../../data'
+
+const route = useRoute()
+const galleryId = route.params.id as string
+
+const gallery = computed(() => {
+  return galleries.find((g) => g.id === galleryId)
+})
 
 const activeImageIndex = ref<number | null>(null)
 const isZoomed = ref(false)
@@ -18,15 +26,15 @@ const closeLightbox = () => {
 }
 
 const nextImage = () => {
-  if (activeImageIndex.value === null) return
+  if (activeImageIndex.value === null || !gallery.value) return
   isZoomed.value = false
-  activeImageIndex.value = (activeImageIndex.value + 1) % projects.length
+  activeImageIndex.value = (activeImageIndex.value + 1) % gallery.value.images.length
 }
 
 const prevImage = () => {
-  if (activeImageIndex.value === null) return
+  if (activeImageIndex.value === null || !gallery.value) return
   isZoomed.value = false
-  activeImageIndex.value = (activeImageIndex.value - 1 + projects.length) % projects.length
+  activeImageIndex.value = (activeImageIndex.value - 1 + gallery.value.images.length) % gallery.value.images.length
 }
 
 const toggleZoom = () => {
@@ -50,82 +58,77 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="max-w-[1600px] mx-auto">
-    <!-- Clean asymmetrical grid with aligned heights to eliminate awkward vertical gaps -->
-    <div class="flex flex-col gap-[15px] md:gap-[20px]">
-      
-      <!-- Row 1: Left Landscape (60%), Right Portrait (40%) -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-[15px] md:gap-[20px] md:h-[450px] lg:h-[550px] xl:h-[650px]">
-        <div class="md:col-span-7 h-[250px] sm:h-[350px] md:h-full overflow-hidden group bg-neutral-100 cursor-pointer" @click="openLightbox(0)">
-          <img 
-            :src="projects[0].image" 
-            :alt="projects[0].title" 
-            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            loading="lazy"
-          />
+  <div class="max-w-[1400px] mx-auto py-8">
+    
+    <!-- Gallery Not Found -->
+    <div v-if="!gallery" class="text-center py-20">
+      <h1 class="text-2xl font-black uppercase tracking-widest mb-6">Gallery Not Found</h1>
+      <p class="text-neutral-500 mb-8 font-light">The gallery session you are looking for does not exist.</p>
+      <NuxtLink to="/galleries" class="text-sm uppercase tracking-widest font-bold underline underline-offset-4">
+        Back to Galleries
+      </NuxtLink>
+    </div>
+
+    <!-- Gallery Detail view -->
+    <div v-else>
+      <!-- Back Link -->
+      <NuxtLink 
+        to="/galleries" 
+        class="text-xs uppercase tracking-widest font-bold mb-12 flex items-center gap-2 hover:opacity-60 transition-opacity"
+      >
+        ← Back to Galleries
+      </NuxtLink>
+
+      <!-- Gallery Header -->
+      <div class="mb-16 md:mb-24 flex flex-col items-start max-w-2xl">
+        <div class="flex items-center gap-3 text-xs uppercase tracking-wider text-neutral-400 mb-3">
+          <span>{{ gallery.year }}</span>
+          <span>·</span>
+          <span>{{ gallery.tags.join(', ') }}</span>
         </div>
-        <div class="md:col-span-5 h-[250px] sm:h-[350px] md:h-full overflow-hidden group bg-neutral-100 cursor-pointer" @click="openLightbox(1)">
-          <img 
-            :src="projects[1].image" 
-            :alt="projects[1].title" 
-            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            loading="lazy"
-          />
-        </div>
+        <h1 class="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight mb-6">
+          {{ gallery.title }}
+        </h1>
+        <p class="text-neutral-600 text-base md:text-lg leading-relaxed font-light">
+          {{ gallery.description }}
+        </p>
       </div>
 
-      <!-- Row 2: Left Portrait (40%), Right Landscape (60%) -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-[15px] md:gap-[20px] md:h-[450px] lg:h-[550px] xl:h-[650px]">
-        <div class="md:col-span-5 h-[250px] sm:h-[350px] md:h-full overflow-hidden group bg-neutral-100 cursor-pointer" @click="openLightbox(2)">
+      <!-- Image Display (Clean, varying ratios grid to display photos) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 md:gap-8">
+        <div 
+          v-for="(img, idx) in gallery.images" 
+          :key="idx"
+          class="overflow-hidden bg-neutral-100 group cursor-pointer relative"
+          :class="img.aspect === 'portrait' ? 'lg:col-span-4 aspect-[3/4]' : 'lg:col-span-8 aspect-[4/3]'"
+          @click="openLightbox(idx)"
+        >
           <img 
-            :src="projects[2].image" 
-            :alt="projects[2].title" 
+            :src="img.url" 
+            :alt="img.caption" 
             class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             loading="lazy"
           />
-        </div>
-        <div class="md:col-span-7 h-[250px] sm:h-[350px] md:h-full overflow-hidden group bg-neutral-100 cursor-pointer" @click="openLightbox(3)">
-          <img 
-            :src="projects[3].image" 
-            :alt="projects[3].title" 
-            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            loading="lazy"
-          />
-        </div>
-      </div>
-
-      <!-- Row 3: Left Landscape (60%), Right Portrait (40%) -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-[15px] md:gap-[20px] md:h-[450px] lg:h-[550px] xl:h-[650px]">
-        <div class="md:col-span-7 h-[250px] sm:h-[350px] md:h-full overflow-hidden group bg-neutral-100 cursor-pointer" @click="openLightbox(4)">
-          <img 
-            :src="projects[4].image" 
-            :alt="projects[4].title" 
-            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            loading="lazy"
-          />
-        </div>
-        <div class="md:col-span-5 h-[250px] sm:h-[350px] md:h-full overflow-hidden group bg-neutral-100 cursor-pointer" @click="openLightbox(5)">
-          <img 
-            :src="projects[5].image" 
-            :alt="projects[5].title" 
-            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            loading="lazy"
-          />
+          <!-- Hover caption -->
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+            <p class="text-white text-xs uppercase tracking-wider font-medium">
+              {{ img.caption }}
+            </p>
+          </div>
         </div>
       </div>
-
     </div>
 
     <!-- Lightbox Modal -->
     <Transition name="fade">
       <div 
-        v-if="activeImageIndex !== null" 
+        v-if="activeImageIndex !== null && gallery" 
         class="fixed inset-0 bg-white z-50 flex flex-col justify-between"
       >
         <!-- Lightbox Header / Controls -->
         <div class="px-6 md:px-12 py-6 flex items-center justify-between text-black bg-white">
           <div class="text-sm uppercase tracking-widest font-bold">
-            {{ projects[activeImageIndex].title }}
+            {{ gallery.images[activeImageIndex].caption }}
           </div>
           <div class="flex items-center gap-6">
             <button 
@@ -163,8 +166,8 @@ onUnmounted(() => {
             @click="toggleZoom"
           >
             <img 
-              :src="projects[activeImageIndex].image" 
-              :alt="projects[activeImageIndex].title" 
+              :src="gallery.images[activeImageIndex].url" 
+              :alt="gallery.images[activeImageIndex].caption" 
               class="max-w-full max-h-[75vh] object-contain transition-transform duration-300"
               :class="isZoomed ? 'scale-125' : 'scale-100'"
             />
@@ -183,12 +186,12 @@ onUnmounted(() => {
         <!-- Lightbox Footer -->
         <div class="px-6 md:px-12 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs tracking-wider uppercase text-neutral-400 bg-white border-t border-neutral-100">
           <div>
-            {{ projects[activeImageIndex].description }}
+            {{ gallery.title }} Gallery
           </div>
           <div class="flex items-center gap-4">
-            <span>{{ activeImageIndex + 1 }} / {{ projects.length }}</span>
+            <span>{{ activeImageIndex + 1 }} / {{ gallery.images.length }}</span>
             <span>·</span>
-            <span>{{ projects[activeImageIndex].year }}</span>
+            <span>{{ gallery.year }}</span>
           </div>
         </div>
       </div>

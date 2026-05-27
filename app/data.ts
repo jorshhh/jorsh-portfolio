@@ -18,6 +18,20 @@ export interface Post {
   body: string
 }
 
+export interface Gallery {
+  id: string
+  title: string
+  description: string
+  coverImage: string
+  year: number
+  tags: string[]
+  images: {
+    url: string
+    caption: string
+    aspect: 'landscape' | 'portrait'
+  }[]
+}
+
 export const portfolio = {
   name: "JORSH",
   tagline: "Photographer & Visual Artist",
@@ -79,6 +93,104 @@ export const projects: Project[] = [
     tags: ["Nature", "Detail"],
     image: "https://images.unsplash.com/photo-1528183429752-a97d0bf99b5a?w=800&q=80",
     year: 2023,
+  }
+]
+
+export const galleries: Gallery[] = [
+  {
+    id: "travel",
+    title: "Travel",
+    description: "Visual diaries and landscapes captured across Iceland, Japan, and the Pacific Northwest.",
+    coverImage: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80",
+    year: 2025,
+    tags: ["Adventure", "Landscape", "Earth"],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80",
+        caption: "Silent glacial lake under morning fog, Iceland.",
+        aspect: "landscape"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80",
+        caption: "Towering bamboo stalks reaching the sky, Kyoto, Japan.",
+        aspect: "portrait"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=1200&q=80",
+        caption: "Golden light casting over rolling clouds below Mt. Fuji.",
+        aspect: "landscape"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
+        caption: "Moody coastlines of the Pacific Northwest, Oregon.",
+        aspect: "landscape"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80",
+        caption: "First light reflecting on a quiet alpine lake in the Cascades.",
+        aspect: "landscape"
+      }
+    ]
+  },
+  {
+    id: "portraits",
+    title: "Portraits",
+    description: "Minimalist studio portraiture focusing on character, form, and natural light.",
+    coverImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&q=80",
+    year: 2025,
+    tags: ["Editorial", "Natural Light", "Form"],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80",
+        caption: "Soft window light highlighting clean studio lines.",
+        aspect: "portrait"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
+        caption: "High-contrast monochrome studio portrait, study in shadow.",
+        aspect: "portrait"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
+        caption: "Candid editorial profile in golden afternoon sunlight.",
+        aspect: "portrait"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&q=80",
+        caption: "Expressive portrait highlighting subtle textures and warm tones.",
+        aspect: "landscape"
+      }
+    ]
+  },
+  {
+    id: "street",
+    title: "Street & Architecture",
+    description: "Documenting the geometry, shadows, and quiet moments of metropolitan life.",
+    coverImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+    year: 2024,
+    tags: ["Brutalist", "Metropolitan", "Geometry"],
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+        caption: "Brutalist glass and concrete symmetry, downtown Toronto.",
+        aspect: "landscape"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&q=80",
+        caption: "Reflected neon lights and late-night alleys.",
+        aspect: "landscape"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
+        caption: "Brutalist concrete staircase showing sharp diagonal shadows.",
+        aspect: "portrait"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1515162305285-0293e4767cc2?w=1200&q=80",
+        caption: "Subway platform geometry with silhouette commuters.",
+        aspect: "landscape"
+      }
+    ]
   }
 ]
 
