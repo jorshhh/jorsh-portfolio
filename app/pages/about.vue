@@ -7,7 +7,13 @@ import { portfolio } from '../data'
     <!-- Asymmetric 2-Column About Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-2 w-full gap-12">
       <!-- Left Column: Beautiful Empty Whitespace -->
-      <div class="hidden lg:block"></div>
+      <div class="lg:block">
+        <img
+            :src="portfolio.portrait"
+            :alt="portfolio.name"
+            class="w-full h-full min-h-[420px] object-cover"
+        >
+      </div>
 
       <!-- Right Column: Solid Light Gray Block with Content -->
       <div class="bg-neutral-50 border border-neutral-100 p-8 md:p-16 lg:p-20 flex flex-col justify-center">

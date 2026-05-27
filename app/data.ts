@@ -34,16 +34,16 @@ export interface Gallery {
 }
 
 export const portfolio = {
-  name: "JORSH",
+  name: "JORGE RANGEL",
   gridColumns: 2 as 2 | 3,
-  tagline: "Photographer & Visual Artist",
+  tagline: "Photographer",
   bio: "Born and raised in Toronto, ON. It all begins with an idea. Maybe you want to launch a business. Maybe you want to turn a hobby into something more. Or maybe you have a creative project to share with the world. Whatever it is, the way you tell your story online can make all the difference.",
-  email: "hello@jorsh.io",
+  email: "jorsh@jorsh.sh",
   representationEmail: "rep@jorsh.io",
   pressEmail: "press@jorsh.io",
+  portrait: "https://taf-v2-images.s3.amazonaws.com/prod/58/conversions/401498411_308783158586560_5503683204801589491_n-avatar_thumb.jpg",
   social: {
-    instagram: "https://instagram.com/jorsh",
-    twitter: "https://twitter.com/jorsh",
+    instagram: "https://instagram.com/jorshhhh",
   }
 }
 
@@ -166,37 +166,6 @@ export const galleries: Gallery[] = [
       }
     ]
   },
-  {
-    id: "street",
-    title: "Street & Architecture",
-    columns: 3,
-    description: "Documenting the geometry, shadows, and quiet moments of metropolitan life.",
-    coverImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
-    year: 2024,
-    tags: ["Brutalist", "Metropolitan", "Geometry"],
-    images: [
-      {
-        url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
-        caption: "Brutalist glass and concrete symmetry, downtown Toronto.",
-        aspect: "landscape"
-      },
-      {
-        url: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&q=80",
-        caption: "Reflected neon lights and late-night alleys.",
-        aspect: "landscape"
-      },
-      {
-        url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
-        caption: "Brutalist concrete staircase showing sharp diagonal shadows.",
-        aspect: "portrait"
-      },
-      {
-        url: "https://images.unsplash.com/photo-1515162305285-0293e4767cc2?w=1200&q=80",
-        caption: "Subway platform geometry with silhouette commuters.",
-        aspect: "landscape"
-      }
-    ]
-  }
 ]
 
 export const posts: Post[] = [

@@ -33,8 +33,6 @@ const gallery = computed(() => galleries.find((g) => g.id === galleryId))
       <div class="mb-16 md:mb-24 flex flex-col items-start max-w-2xl">
         <div class="flex items-center gap-3 text-xs uppercase tracking-wider text-neutral-400 mb-3">
           <span>{{ gallery.year }}</span>
-          <span>·</span>
-          <span>{{ gallery.tags.join(', ') }}</span>
         </div>
         <h1 class="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight mb-6">
           {{ gallery.title }}

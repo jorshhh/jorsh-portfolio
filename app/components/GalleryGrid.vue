@@ -43,8 +43,19 @@ const colSpanClass: Record<number, string> = {
   12: 'md:col-span-12',
 }
 
-function pick<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)]
+function pick<T>(items: readonly T[]): T {
+  if (items.length === 0) {
+    throw new Error('Cannot pick from an empty array')
+  }
+
+  const randomIndex = Math.floor(Math.random() * items.length)
+  const selectedItem = items[randomIndex]
+
+  if (selectedItem === undefined) {
+    throw new Error('Failed to pick an item')
+  }
+
+  return selectedItem
 }
 
 function spansForRow(itemCount: number, cols: number): number[] {
@@ -157,12 +168,6 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             loading="lazy"
           />
-          <div
-            v-if="item.text"
-            class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6"
-          >
-            <p class="text-white text-xs uppercase tracking-wider font-medium">{{ item.text }}</p>
-          </div>
         </div>
       </div>
     </div>
@@ -176,7 +181,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
         <!-- Header -->
         <div class="px-6 md:px-12 py-6 flex items-center justify-between text-black bg-white">
           <div class="text-sm uppercase tracking-widest font-bold">
-            {{ activeItem.label }}
+            {{ activeItem?.label }}
           </div>
           <div class="flex items-center gap-6">
             <button
@@ -212,8 +217,8 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             @click="toggleZoom"
           >
             <img
-              :src="activeItem.src"
-              :alt="activeItem.label"
+              :src="activeItem?.src"
+              :alt="activeItem?.label"
               class="max-w-full max-h-[75vh] object-contain transition-transform duration-300"
               :class="isZoomed ? 'scale-125' : 'scale-100'"
             />
@@ -230,12 +235,12 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
         <!-- Footer -->
         <div class="px-6 md:px-12 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs tracking-wider uppercase text-neutral-400 bg-white border-t border-neutral-100">
-          <div>{{ activeItem.text }}</div>
+          <div>{{ activeItem?.text }}</div>
           <div class="flex items-center gap-4">
             <span>{{ (activeImageIndex ?? 0) + 1 }} / {{ normalizedItems.length }}</span>
-            <template v-if="activeItem.year">
+            <template v-if="activeItem?.year">
               <span>·</span>
-              <span>{{ activeItem.year }}</span>
+              <span>{{ activeItem?.year }}</span>
             </template>
           </div>
         </div>

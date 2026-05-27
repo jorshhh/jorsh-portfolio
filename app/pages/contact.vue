@@ -56,10 +56,6 @@ import { portfolio } from '../data'
             <a :href="portfolio.social.instagram" target="_blank" rel="noopener noreferrer" class="hover:underline">
               Instagram
             </a>
-            <span>·</span>
-            <a :href="portfolio.social.twitter" target="_blank" rel="noopener noreferrer" class="hover:underline">
-              Twitter
-            </a>
           </div>
         </div>
       </div>
