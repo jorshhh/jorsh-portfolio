@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 interface GalleryItem {
   image?: string
@@ -22,26 +22,69 @@ const normalizedItems = computed(() =>
     label: item.title || item.caption || item.description || '',
     text: item.description || item.caption || '',
     year: item.year,
-    aspect: item.aspect,
   }))
 )
 
-const rows = computed(() => {
-  const result: Array<Array<typeof normalizedItems.value[0] & { isWide: boolean }>> = []
-  const flat = normalizedItems.value
-  for (let i = 0; i < flat.length; i += 2) {
-    const rowIndex = result.length
-    const isEvenRow = rowIndex % 2 === 0
-    const pair = flat.slice(i, i + 2).map((item, j) => {
-      const isWide = item.aspect
-        ? item.aspect === 'landscape'
-        : isEvenRow ? j === 0 : j === 1
-      return { ...item, isWide }
-    })
-    result.push(pair)
+// ── Column layout ──────────────────────────────────────────────────────────
+
+const columnCount = ref<2 | 3>(2)
+
+const TWO_COL_OPTIONS = [[6, 6], [7, 5], [5, 7]] as const
+const THREE_COL_OPTIONS = [[4, 4, 4], [5, 4, 3], [3, 5, 4], [4, 3, 5], [5, 3, 4]] as const
+
+// Full class strings must appear as literals for Tailwind's scanner.
+const colSpanClass: Record<number, string> = {
+  3: 'md:col-span-3',
+  4: 'md:col-span-4',
+  5: 'md:col-span-5',
+  6: 'md:col-span-6',
+  7: 'md:col-span-7',
+  12: 'md:col-span-12',
+}
+
+function pick<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function spansForRow(itemCount: number, cols: number): number[] {
+  if (cols === 2) {
+    return itemCount === 2 ? [...pick(TWO_COL_OPTIONS)] : [12]
   }
-  return result
+  // cols === 3
+  if (itemCount === 3) return [...pick(THREE_COL_OPTIONS)]
+  if (itemCount === 2) return [6, 6]
+  return [12]
+}
+
+const rowSpans = ref<number[][]>([])
+
+function generateSpans() {
+  const items = normalizedItems.value
+  const cols = columnCount.value
+  const result: number[][] = []
+  for (let i = 0; i < items.length; i += cols) {
+    result.push(spansForRow(items.slice(i, i + cols).length, cols))
+  }
+  rowSpans.value = result
+}
+
+// flush: 'sync' keeps rowSpans in step with columnCount before re-render
+watch([() => normalizedItems.value.length, columnCount], generateSpans, {
+  immediate: true,
+  flush: 'sync',
 })
+
+const rows = computed(() => {
+  const items = normalizedItems.value
+  const cols = columnCount.value
+  return Array.from({ length: Math.ceil(items.length / cols) }, (_, rowIdx) => {
+    const rowItems = items.slice(rowIdx * cols, (rowIdx + 1) * cols)
+    const spans = rowSpans.value[rowIdx] ?? Array(rowItems.length).fill(Math.floor(12 / cols))
+    return rowItems.map((item, j) => ({ ...item, span: spans[j] ?? 6 }))
+  })
+})
+
+// ── Lightbox ───────────────────────────────────────────────────────────────
 
 const activeImageIndex = ref<number | null>(null)
 const isZoomed = ref(false)
@@ -71,7 +114,8 @@ const nextImage = () => {
 const prevImage = () => {
   if (activeImageIndex.value === null) return
   isZoomed.value = false
-  activeImageIndex.value = (activeImageIndex.value - 1 + normalizedItems.value.length) % normalizedItems.value.length
+  activeImageIndex.value =
+    (activeImageIndex.value - 1 + normalizedItems.value.length) % normalizedItems.value.length
 }
 
 const toggleZoom = () => {
@@ -91,17 +135,45 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
 <template>
   <div class="max-w-[1600px] mx-auto">
+
+    <!-- Grid style toggle -->
+    <div class="flex justify-end items-center gap-2 mb-6 text-xs uppercase tracking-widest select-none">
+      <span class="text-neutral-400">Grid:</span>
+      <button
+        @click="columnCount = 2"
+        class="transition-colors duration-200"
+        :class="columnCount === 2
+          ? 'underline underline-offset-4 font-bold text-black'
+          : 'text-neutral-400 hover:text-black'"
+        aria-pressed="columnCount === 2"
+      >
+        2 Col
+      </button>
+      <span class="text-neutral-300">/</span>
+      <button
+        @click="columnCount = 3"
+        class="transition-colors duration-200"
+        :class="columnCount === 3
+          ? 'underline underline-offset-4 font-bold text-black'
+          : 'text-neutral-400 hover:text-black'"
+        aria-pressed="columnCount === 3"
+      >
+        3 Col
+      </button>
+    </div>
+
+    <!-- Grid -->
     <div class="flex flex-col gap-[15px] md:gap-[20px]">
       <div
         v-for="(row, rowIdx) in rows"
-        :key="rowIdx"
+        :key="`${columnCount}-${rowIdx}`"
         class="grid grid-cols-1 md:grid-cols-12 gap-[15px] md:gap-[20px] md:h-[450px] lg:h-[550px] xl:h-[650px]"
       >
         <div
           v-for="item in row"
           :key="item.index"
           class="h-[250px] sm:h-[350px] md:h-full overflow-hidden group bg-neutral-100 cursor-pointer relative"
-          :class="item.isWide ? 'md:col-span-7' : 'md:col-span-5'"
+          :class="colSpanClass[item.span] ?? 'md:col-span-6'"
           @click="openLightbox(item.index)"
         >
           <img
