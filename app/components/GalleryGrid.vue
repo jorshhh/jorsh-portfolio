@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 interface GalleryItem {
   image?: string
@@ -22,131 +22,66 @@ const normalizedItems = computed(() =>
     label: item.title || item.caption || item.description || '',
     text: item.description || item.caption || '',
     year: item.year,
-    aspect: item.aspect,
   }))
 )
 
-// ── Masonry State & ResizeObserver ─────────────────────────────────────────
+// ── Column layout ──────────────────────────────────────────────────────────
 
-const containerRef = ref<HTMLElement | null>(null)
-const containerWidth = ref(0)
-const isMounted = ref(false)
 const columnCount = ref<2 | 3>(2)
 
-let resizeObserver: ResizeObserver | null = null
+const TWO_COL_OPTIONS = [[6, 6], [7, 5], [5, 7]] as const
+const THREE_COL_OPTIONS = [[4, 4, 4], [5, 4, 3], [3, 5, 4], [4, 3, 5], [5, 3, 4]] as const
 
-onMounted(() => {
-  isMounted.value = true
-  if (containerRef.value) {
-    containerWidth.value = containerRef.value.offsetWidth
-    resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        // Use contentRect width
-        containerWidth.value = entry.contentRect.width
-      }
-    })
-    resizeObserver.observe(containerRef.value)
+// Full class strings must appear as literals for Tailwind's scanner.
+const colSpanClass: Record<number, string> = {
+  3: 'md:col-span-3',
+  4: 'md:col-span-4',
+  5: 'md:col-span-5',
+  6: 'md:col-span-6',
+  7: 'md:col-span-7',
+  12: 'md:col-span-12',
+}
+
+function pick<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function spansForRow(itemCount: number, cols: number): number[] {
+  if (cols === 2) {
+    return itemCount === 2 ? [...pick(TWO_COL_OPTIONS)] : [12]
   }
-})
+  // cols === 3
+  if (itemCount === 3) return [...pick(THREE_COL_OPTIONS)]
+  if (itemCount === 2) return [6, 6]
+  return [12]
+}
 
-onUnmounted(() => {
-  if (resizeObserver) {
-    resizeObserver.disconnect()
+const rowSpans = ref<number[][]>([])
+
+function generateSpans() {
+  const items = normalizedItems.value
+  const cols = columnCount.value
+  const result: number[][] = []
+  for (let i = 0; i < items.length; i += cols) {
+    result.push(spansForRow(items.slice(i, i + cols).length, cols))
   }
+  rowSpans.value = result
+}
+
+// flush: 'sync' keeps rowSpans in step with columnCount before re-render
+watch([() => normalizedItems.value.length, columnCount], generateSpans, {
+  immediate: true,
+  flush: 'sync',
 })
 
-// ── Desandro Masonry Layout Algorithm ──────────────────────────────────────
-
-const gap = 20 // Gap in pixels between items
-
-const activeCols = computed(() => {
-  if (!isMounted.value || containerWidth.value === 0) return 2
-  if (containerWidth.value < 768) return 1 // Stack into 1 column on mobile
-  return columnCount.value
-})
-
-const itemAspectRatios = computed(() => {
-  return normalizedItems.value.map((item) => {
-    if (item.aspect === 'portrait') return 0.75
-    if (item.aspect === 'landscape') return 1.5
-    
-    // Guess based on descriptions or fallback to alternation
-    const text = (item.text + " " + item.label).toLowerCase()
-    if (text.includes('portrait') || text.includes('vertical')) return 0.75
-    if (text.includes('landscape') || text.includes('misty') || text.includes('ocean')) return 1.5
-    
-    return item.index % 2 === 0 ? 1.5 : 0.75
+const rows = computed(() => {
+  const items = normalizedItems.value
+  const cols = columnCount.value
+  return Array.from({ length: Math.ceil(items.length / cols) }, (_, rowIdx) => {
+    const rowItems = items.slice(rowIdx * cols, (rowIdx + 1) * cols)
+    const spans = rowSpans.value[rowIdx] ?? Array(rowItems.length).fill(Math.floor(12 / cols))
+    return rowItems.map((item, j) => ({ ...item, span: spans[j] ?? 6 }))
   })
-})
-
-const masonryItems = computed(() => {
-  if (!isMounted.value || containerWidth.value === 0) {
-    return normalizedItems.value.map((item) => ({
-      ...item,
-      style: {} as Record<string, string>,
-    }))
-  }
-
-  const cols = activeCols.value
-  const colWidth = (containerWidth.value - (cols - 1) * gap) / cols
-  const colHeights = Array(cols).fill(0)
-
-  return normalizedItems.value.map((item, idx) => {
-    const aspect = itemAspectRatios.value[idx] ?? 1.2
-    const height = colWidth / aspect
-
-    // Find index of column with minimum height (Desandro's shortest-column logic)
-    let minColIdx = 0
-    let minHeight = colHeights[0]
-    for (let k = 1; k < cols; k++) {
-      if (colHeights[k] < minHeight) {
-        minHeight = colHeights[k]
-        minColIdx = k
-      }
-    }
-
-    const left = minColIdx * (colWidth + gap)
-    const top = colHeights[minColIdx]
-
-    // Update the column height
-    colHeights[minColIdx] += height + gap
-
-    return {
-      ...item,
-      style: {
-        position: 'absolute',
-        left: `${left}px`,
-        top: `${top}px`,
-        width: `${colWidth}px`,
-        height: `${height}px`,
-      } as Record<string, string>,
-    }
-  })
-})
-
-const computedContainerHeight = computed(() => {
-  if (!isMounted.value || containerWidth.value === 0) return 0
-  const cols = activeCols.value
-  const colWidth = (containerWidth.value - (cols - 1) * gap) / cols
-  const colHeights = Array(cols).fill(0)
-
-  normalizedItems.value.forEach((_, idx) => {
-    const aspect = itemAspectRatios.value[idx] ?? 1.2
-    const height = colWidth / aspect
-
-    let minColIdx = 0
-    let minHeight = colHeights[0]
-    for (let k = 1; k < cols; k++) {
-      if (colHeights[k] < minHeight) {
-        minHeight = colHeights[k]
-        minColIdx = k
-      }
-    }
-    colHeights[minColIdx] += height + gap
-  })
-
-  const maxVal = Math.max(...colHeights)
-  return maxVal > 0 ? maxVal - gap : 0
 })
 
 // ── Lightbox ───────────────────────────────────────────────────────────────
@@ -200,9 +135,10 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
 <template>
   <div class="max-w-[1600px] mx-auto">
+
     <!-- Grid style toggle -->
     <div class="flex justify-end items-center gap-2 mb-6 text-xs uppercase tracking-widest select-none">
-      <span class="text-neutral-400">Layout:</span>
+      <span class="text-neutral-400">Grid:</span>
       <button
         @click="columnCount = 2"
         class="transition-colors duration-200"
@@ -226,42 +162,32 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
       </button>
     </div>
 
-    <!-- SSR Fallback Grid (SEO-friendly, static layout) -->
-    <div v-if="!isMounted" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Grid -->
+    <div class="flex flex-col gap-[15px] md:gap-[20px]">
       <div
-        v-for="item in normalizedItems"
-        :key="item.index"
-        class="overflow-hidden bg-neutral-100 aspect-square"
+        v-for="(row, rowIdx) in rows"
+        :key="`${columnCount}-${rowIdx}`"
+        class="grid grid-cols-1 md:grid-cols-12 gap-[15px] md:gap-[20px] md:h-[450px] lg:h-[550px] xl:h-[650px]"
       >
-        <img :src="item.src" :alt="item.label" class="w-full h-full object-cover" />
-      </div>
-    </div>
-
-    <!-- Absolute Positioned DeSandro-style Masonry Grid -->
-    <div
-      v-else
-      ref="containerRef"
-      class="relative w-full transition-all duration-500 ease-out"
-      :style="{ height: `${computedContainerHeight}px` }"
-    >
-      <div
-        v-for="item in masonryItems"
-        :key="item.index"
-        class="overflow-hidden group bg-neutral-100 cursor-pointer absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
-        :style="item.style"
-        @click="openLightbox(item.index)"
-      >
-        <img
-          :src="item.src"
-          :alt="item.label"
-          class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          loading="lazy"
-        />
         <div
-          v-if="item.text"
-          class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6"
+          v-for="item in row"
+          :key="item.index"
+          class="h-[250px] sm:h-[350px] md:h-full overflow-hidden group bg-neutral-100 cursor-pointer relative"
+          :class="colSpanClass[item.span] ?? 'md:col-span-6'"
+          @click="openLightbox(item.index)"
         >
-          <p class="text-white text-xs uppercase tracking-wider font-medium">{{ item.text }}</p>
+          <img
+            :src="item.src"
+            :alt="item.label"
+            class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy"
+          />
+          <div
+            v-if="item.text"
+            class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6"
+          >
+            <p class="text-white text-xs uppercase tracking-wider font-medium">{{ item.text }}</p>
+          </div>
         </div>
       </div>
     </div>
